@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Pipeline (local)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/pipeline/main.py",
+            "args": [
+                "--bucket=meu-bucket-dev",
+                "--project_id=meu-projeto-gcp",
+                "--date=2026-04-11"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

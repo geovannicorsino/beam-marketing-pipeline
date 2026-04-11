@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "beam-marketing-pipeline"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "apache-beam[gcp]==2.72.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.0",
+    "pytest-cov==5.0.0",
+    "ruff==0.8.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pipeline*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+select = ["E", "F", "I", "W", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=pipeline --cov-report=term-missing"
