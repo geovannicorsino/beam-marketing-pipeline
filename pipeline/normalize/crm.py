@@ -1,0 +1,23 @@
+import apache_beam as beam
+
+
+class NormalizeCRMFn(beam.DoFn):
+    def process(self, element: dict):
+        analytics_user_id = element.get("analytics_user_id", "").strip()
+
+        if not analytics_user_id:
+            return
+
+        try:
+            lead_score = int(element.get("lead_score") or 0)
+        except ValueError:
+            return
+
+        yield {
+            "analytics_user_id": analytics_user_id,
+            "crm_id": element.get("crm_id", ""),
+            "status": element.get("status", ""),
+            "date": element.get("date", ""),
+            "lead_score": lead_score,
+            "product_interest": element.get("product_interest") or None,
+        }
