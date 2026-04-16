@@ -14,11 +14,15 @@ def _parse_csv_line(line: str) -> dict:
     return next(reader)
 
 
-def read_crm(pipeline, bucket: str, account_id: str, date: str):
-    pattern = f"data/fixtures/crm_2026-04-10.csv"
-    # pattern = f"gs://{bucket}/raw/crm/leads/account_id={account_id}/date={date}/*.csv"
+def _read_from_path(pipeline, pattern: str):
     return (
         pipeline
         | "ReadCRMRaw" >> ReadFromText(pattern, skip_header_lines=1)
         | "ParseCRMCSV" >> beam.Map(_parse_csv_line)
     )
+
+
+def read_crm(pipeline, bucket: str, account_id: str, date: str):
+    # pattern = f"gs://{bucket}/raw/crm/leads/account_id={account_id}/date={date}/*.csv"
+    pattern = "data/fixtures/crm_2026-04-10.csv"
+    return _read_from_path(pipeline, pattern)
