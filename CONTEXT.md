@@ -4,7 +4,7 @@
 
 A batch data pipeline built with Apache Beam (Python) that ingests marketing data from Google Analytics 4, Adobe Analytics, and a CRM system, joins them, classifies leads, and delivers enriched data to BigQuery and GCS.
 
-This is a personal practice project. A few years ago the same pipeline was built in Java with Apache Beam, working alongside a senior data engineer. This is a reimplementation in Python, used to solidify Apache Beam fundamentals and refine things that were not done in the original — specifically lead classification, dead-letter sink, and Beam metrics.
+This is a personal practice project. A few years ago the same pipeline was built in Java with Apache Beam. This is a reimplementation in Python, used to solidify Apache Beam fundamentals and refine things that were not in the original — specifically lead classification, dead-letter sink, and Beam metrics.
 
 The focus is not on questioning the architecture or whether it's the optimal solution. It's on practicing Apache Beam patterns in Python and building a clean, testable, production-grade pipeline from scratch.
 
@@ -55,7 +55,7 @@ A pipeline that:
 ### To do
 
 - [x] `ClassifyLeadFn` + `config/lead_classification_rules.json` + tests
-- [ ] `DeduplicateAnalyticsFn` + tests
+- [x] `DeduplicateAnalyticsFn` + tests
 - [ ] Dead-letter sink (`pipeline/sinks/dead_letter.py`) + `NormalizeCRMFn` integration
 - [ ] Parquet sink → GCS silver (`pipeline/sinks/parquet.py`)
 - [ ] BigQuery sink → `leads_enriched` (`pipeline/sinks/bigquery.py`)

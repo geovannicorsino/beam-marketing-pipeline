@@ -13,7 +13,16 @@ class JoinAnalyticsCRMFn(beam.DoFn):
             return
 
         crm = crm_records[0]
-        campaign_name = analytics_records[0].campaign_name if analytics_records else None
+
+        # First-touch attribution: pick campaign_name from the oldest analytics record
+        first_touch = (
+            min(
+                (r for r in analytics_records if r.date and r.campaign_name),
+                key=lambda r: r.date,
+                default=None,
+            )
+        )
+        campaign_name = first_touch.campaign_name if first_touch else None
 
         yield TableRecord(
             analytics_user_id=analytics_user_id,

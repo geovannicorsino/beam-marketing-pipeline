@@ -21,17 +21,15 @@ Phase 2 — Normalize (parallel per source)
 Phase 3 — Enrich CRM with Analytics
 └── CoGroupByKey(analytics_user_id)
     ├── CRM com match → TableRecord (CRM fields + campaign_name from analytics)
+    │   └── Multiple analytics records → first-touch attribution: picks campaign_name
+    │       from the record with the oldest date (min date) across GA4 + Adobe
     └── CRM sem match → TableRecord (CRM fields, campaign_name=None)
 
-Phase 4 — Dedup Analytics
-└── GroupByKey(analytics_user_id)
-    → DeduplicateAnalyticsFn → picks max(date) per user across GA4 + Adobe
-
-Phase 5 — Flatten
+Phase 4 — Flatten
 └── PCollection[TableRecord] analytics + PCollection[TableRecord] CRM enriched
     → beam.Flatten() → single PCollection[TableRecord]
 
-Phase 6 — Lead classification
+Phase 5 — Lead classification
 ├── Rules loaded from config/lead_classification_rules.json via setup()
 ├── Only applied to records where source_system == "crm"
 ├── CONVERTED → status IN [converted, purchased, subscribed]
@@ -40,7 +38,7 @@ Phase 6 — Lead classification
 ├── NURTURING → status IN [email_opened, page_visited, retargeted]
 └── COLD      → everything else
 
-Phase 7 — Sinks
+Phase 6 — Sinks
 ├── WriteToParquet  → gs://{bucket}/silver/beam-analytics/date={run_date}/{run_date}.parquet  (snappy)
 ├── WriteToBigQuery → {project}.{dataset}.leads                                                (WRITE_APPEND)
 └── DeadLetterSink  → gs://{bucket}/dead-letter/date={run_date}/{run_date}.json
@@ -179,8 +177,7 @@ beam-marketing-pipeline/
 │   │   ├── analytics.py              # NormalizeGA4Fn, NormalizeAdobeFn → TableRecord
 │   │   └── crm.py                    # NormalizeCRMFn → dict (+ dead-letter)
 │   ├── transforms/
-│   │   ├── join.py                   # JoinAnalyticsCRMFn (CoGroupByKey)
-│   │   ├── dedup.py                  # DeduplicateAnalyticsFn
+│   │   ├── join.py                   # JoinAnalyticsCRMFn (CoGroupByKey + first-touch attribution)
 │   │   └── classification.py        # ClassifyLeadFn
 │   ├── sinks/
 │   │   ├── parquet.py                # WriteToParquet → GCS silver
