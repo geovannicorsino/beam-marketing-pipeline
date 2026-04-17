@@ -1,10 +1,13 @@
 import apache_beam as beam
+from pipeline.normalize.analytics import NormalizeAdobeFn, NormalizeGA4Fn
+from pipeline.normalize.crm import DEAD_LETTER_TAG, NormalizeCRMFn
 from pipeline.options import MarketingPipelineOptions
-from pipeline.sources.ga4 import read_ga4
+from pipeline.sinks.dead_letter import write_dead_letter
 from pipeline.sources.adobe import read_adobe
 from pipeline.sources.crm import read_crm
-from pipeline.normalize.analytics import NormalizeGA4Fn, NormalizeAdobeFn
-from pipeline.normalize.crm import NormalizeCRMFn
+from pipeline.sources.ga4 import read_ga4
+from pipeline.transforms.classification import ClassifyLeadFn
+from pipeline.transforms.dedup_crm import DeduplicateCRMFn
 from pipeline.transforms.join import JoinAnalyticsCRMFn
 
 options = MarketingPipelineOptions()
@@ -25,20 +28,39 @@ with beam.Pipeline(options=options) as p:
 
     analytics = (ga4, adobe) | "FlattenAnalytics" >> beam.Flatten()
 
-    crm = (
+    crm_output = (
         read_crm(p, bucket=known.bucket,
                  account_id=known.project_id, date=known.date)
-        | "NormalizeCRM" >> beam.ParDo(NormalizeCRMFn())
+        | "NormalizeCRM" >> beam.ParDo(NormalizeCRMFn()).with_outputs(
+            DEAD_LETTER_TAG, main="valid"
+        )
+    )
+
+    dedup_output = (
+        crm_output.valid
+        | "KeyCRMById" >> beam.WithKeys(lambda r: r["crm_id"])
+        | "GroupByCRMId" >> beam.GroupByKey()
+        | "DeduplicateCRM" >> beam.ParDo(DeduplicateCRMFn()).with_outputs(
+            DEAD_LETTER_TAG, main="valid"
+        )
     )
 
     crm_enriched = (
-        {"analytics": analytics | "KeyAnalytics" >> beam.WithKeys(lambda r: r.analytics_user_id),
-         "crm": crm | "KeyCRM" >> beam.WithKeys(lambda r: r["analytics_user_id"])}
+        {
+            "analytics": analytics | "KeyAnalytics" >> beam.WithKeys(lambda r: r.analytics_user_id),
+            "crm": dedup_output.valid | "KeyCRM" >> beam.WithKeys(lambda r: r["analytics_user_id"]),
+        }
         | "CoGroupByKey" >> beam.CoGroupByKey()
         | "JoinAnalyticsCRM" >> beam.ParDo(JoinAnalyticsCRMFn())
-        | "ClassifyLead" >> beam.ParDo(ClassifyLeadFn(known.qualified_lead_score_threshold))
+        | "ClassifyLead" >> beam.ParDo(ClassifyLeadFn("config/lead_classification_rules.json"))
     )
 
     all_records = (analytics, crm_enriched) | "FlattenAll" >> beam.Flatten()
 
+    all_dead_letter = (
+        (crm_output[DEAD_LETTER_TAG], dedup_output[DEAD_LETTER_TAG])
+        | "FlattenDeadLetter" >> beam.Flatten()
+    )
+
     all_records | "PrintRecords" >> beam.Map(print)
+    write_dead_letter(all_dead_letter, bucket=known.bucket, run_date=known.date)

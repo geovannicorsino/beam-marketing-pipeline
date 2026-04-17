@@ -25,7 +25,7 @@ A pipeline that:
 4. Deduplicates analytics records (GA4 + Adobe) by `analytics_user_id`
 5. Flattens analytics and enriched CRM records into a single PCollection
 6. Classifies leads into: `CONVERTED`, `QUALIFIED`, `NURTURING`, `COLD`
-7. Writes the final records to GCS (Parquet) and BigQuery
+7. Writes the final records to BigQuery (`leads_enriched`)
 8. Routes invalid records to a dead-letter sink on GCS
 
 ## GCP project
@@ -34,7 +34,6 @@ A pipeline that:
 | --------------- | -------------------------------------------------- |
 | Project ID      | `corsino-marketing-labs`                           |
 | BigQuery table  | `marketing_analytics_silver.leads_enriched`        |
-| GCS silver      | `silver/beam-analytics/date={date}/{date}.parquet` |
 | GCS dead-letter | `dead-letter/date={date}/{date}.json`              |
 
 ## Implementation status
@@ -55,10 +54,9 @@ A pipeline that:
 ### To do
 
 - [x] `ClassifyLeadFn` + `config/lead_classification_rules.json` + tests
-- [x] `DeduplicateAnalyticsFn` + tests
-- [ ] Dead-letter sink (`pipeline/sinks/dead_letter.py`) + `NormalizeCRMFn` integration
-- [ ] Parquet sink → GCS silver (`pipeline/sinks/parquet.py`)
-- [ ] BigQuery sink → `leads_enriched` (`pipeline/sinks/bigquery.py`)
+- [x] `DeduplicateCRMFn` + tests
+- [x] Dead-letter sink (`pipeline/sinks/dead_letter.py`) — GCS JSON + `NormalizeCRMFn` + `DeduplicateCRMFn` integration
+- [ ] BigQuery sink → `leads_enriched` + `dead_letter` (`pipeline/sinks/bigquery.py`, `WRITE_APPEND`)
 - [ ] Beam metrics (`pipeline/utils/metrics.py`) + `log_metrics()` with match rate alert
 - [ ] Wire everything in `main.py` (sinks, dead-letter, metrics)
 - [ ] Integration test (`tests/integration/test_pipeline_e2e.py`)

@@ -1,5 +1,5 @@
-from pipeline.transforms.join import JoinAnalyticsCRMFn
 from pipeline.schemas.table_record import TableRecord
+from pipeline.transforms.join import JoinAnalyticsCRMFn
 
 
 ANALYTICS_RECORD = TableRecord(
@@ -55,11 +55,21 @@ def test_join_crm_fields_populated():
     assert record.product_interest == "enterprise_plan"
 
 
-def test_join_without_analytics_campaign_is_none():
+def test_join_without_analytics_match_campaign_is_none():
+    fn = JoinAnalyticsCRMFn()
+    element = _make_grouped(analytics=[], crm=[CRM_RECORD])
+    result = list(fn.process(element))
+    assert len(result) == 1
+    assert isinstance(result[0], TableRecord)
+    assert result[0].campaign_name is None
+
+
+def test_join_without_analytics_match_record_is_emitted():
     fn = JoinAnalyticsCRMFn()
     element = _make_grouped(analytics=[], crm=[CRM_RECORD])
     record = list(fn.process(element))[0]
-    assert record.campaign_name is None
+    assert record.crm_id == "crm-001"
+    assert record.source_system == "crm"
 
 
 def test_join_no_crm_yields_nothing():

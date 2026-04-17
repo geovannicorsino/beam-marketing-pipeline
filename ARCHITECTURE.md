@@ -39,8 +39,7 @@ Phase 5 — Lead classification
 └── COLD      → everything else
 
 Phase 6 — Sinks
-├── WriteToParquet  → gs://{bucket}/silver/beam-analytics/date={run_date}/{run_date}.parquet  (snappy)
-├── WriteToBigQuery → {project}.{dataset}.leads                                                (WRITE_APPEND)
+├── WriteToBigQuery → {project}.marketing_analytics_silver.leads_enriched  (WRITE_APPEND)
 └── DeadLetterSink  → gs://{bucket}/dead-letter/date={run_date}/{run_date}.json
 ```
 
@@ -64,10 +63,6 @@ gs://{bucket}/
 │   └── crm/
 │       └── files/
 │           └── data.csv                ← full weekly load, no date partition
-├── silver/
-│   └── beam-analytics/
-│       └── date={yyyy-mm-dd}/
-│           └── {yyyymmdd}.parquet
 └── dead-letter/
     └── date={yyyy-mm-dd}/
         └── {yyyymmdd}.json
@@ -180,8 +175,7 @@ beam-marketing-pipeline/
 │   │   ├── join.py                   # JoinAnalyticsCRMFn (CoGroupByKey + first-touch attribution)
 │   │   └── classification.py        # ClassifyLeadFn
 │   ├── sinks/
-│   │   ├── parquet.py                # WriteToParquet → GCS silver
-│   │   ├── bigquery.py               # WriteToBigQuery → leads table
+│   │   ├── bigquery.py               # WriteToBigQuery → leads_enriched + dead_letter tables
 │   │   └── dead_letter.py            # WriteToText → GCS dead-letter
 │   └── utils/
 │       └── metrics.py                # log_metrics() + match rate alert
@@ -251,5 +245,5 @@ dev = [
 | Classification rules  | JSON config loaded in `setup()`            | Keeps business rules out of code; `setup()` is called on workers  |
 | CRM load strategy     | Full weekly load, no date partition        | CRM file is always a full snapshot, not incremental               |
 | Dead-letter           | GCS JSON instead of discard                | Preserves bad records for investigation and reprocessing          |
-| Sink strategy         | Parquet (GCS) + BigQuery native            | Demonstrates both patterns                                        |
+| Sink strategy         | BigQuery only (`leads_enriched` + `dead_letter`) | Analysts query directly from BQ; GCS Parquet silver redundante    |
 | Runners               | DirectRunner (dev) → DataflowRunner (prod) | Same code runs on both                                            |

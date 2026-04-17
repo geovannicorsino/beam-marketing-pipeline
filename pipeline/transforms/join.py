@@ -1,4 +1,5 @@
 import apache_beam as beam
+
 from pipeline.schemas.table_record import TableRecord
 
 
@@ -15,12 +16,10 @@ class JoinAnalyticsCRMFn(beam.DoFn):
         crm = crm_records[0]
 
         # First-touch attribution: pick campaign_name from the oldest analytics record
-        first_touch = (
-            min(
-                (r for r in analytics_records if r.date and r.campaign_name),
-                key=lambda r: r.date,
-                default=None,
-            )
+        first_touch = min(
+            (r for r in analytics_records if r.date and r.campaign_name),
+            key=lambda r: r.date,
+            default=None,
         )
         campaign_name = first_touch.campaign_name if first_touch else None
 
