@@ -1,0 +1,16 @@
+analytics_user_id,crm_id,status,date,lead_score,last_interaction_days,product_interest
+ga4_user_001,crm-001,lead,2026-03-15,95,5,enterprise_plan
+ga4_user_002,crm-002,lead,2026-04-01,88,2,starter_plan
+ga4_user_003,crm-003,lead,2026-03-28,72,10,pro_plan
+ga4_user_004,crm-004,demo_requested,2026-04-05,65,15,enterprise_plan
+ga4_user_005,crm-005,cart_abandoned,2026-04-02,60,20,starter_plan
+adobe_user_001,crm-006,form_completed,2026-04-08,70,8,pro_plan
+adobe_user_002,crm-007,email_opened,2026-03-25,30,45,starter_plan
+ga4_user_008,crm-008,page_visited,2026-02-10,20,60,starter_plan
+ga4_user_009,crm-009,retargeted,2026-01-20,15,80,pro_plan
+ga4_user_010,crm-010,churned,2025-10-01,5,200,
+ga4_user_012,crm-012,demo_requested,2026-04-01,40,15,starter_plan
+ga4_user_013,crm-013,email_opened,2026-01-05,50,95,pro_plan
+,crm-014,page_visited,2026-03-15,10,30,starter_plan
+,crm-015,email_opened,2026-03-20,25,45,pro_plan
+ga4_user_014,crm-016,INVALID_STATUS,2026-04-10,abc,xyz,

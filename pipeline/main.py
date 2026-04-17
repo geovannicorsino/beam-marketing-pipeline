@@ -12,19 +12,22 @@ known = options.view_as(MarketingPipelineOptions)
 
 with beam.Pipeline(options=options) as p:
     ga4 = (
-        read_ga4(p, bucket=known.bucket, report="sessions", account_id=known.project_id, date=known.date)
+        read_ga4(p, bucket=known.bucket, report="sessions",
+                 account_id=known.project_id, date=known.date)
         | "NormalizeGA4" >> beam.ParDo(NormalizeGA4Fn())
     )
 
     adobe = (
-        read_adobe(p, bucket=known.bucket, report="sessions", account_id=known.project_id, date=known.date)
+        read_adobe(p, bucket=known.bucket, report="sessions",
+                   account_id=known.project_id, date=known.date)
         | "NormalizeAdobe" >> beam.ParDo(NormalizeAdobeFn())
     )
 
     analytics = (ga4, adobe) | "FlattenAnalytics" >> beam.Flatten()
 
     crm = (
-        read_crm(p, bucket=known.bucket, account_id=known.project_id, date=known.date)
+        read_crm(p, bucket=known.bucket,
+                 account_id=known.project_id, date=known.date)
         | "NormalizeCRM" >> beam.ParDo(NormalizeCRMFn())
     )
 
@@ -33,6 +36,7 @@ with beam.Pipeline(options=options) as p:
          "crm": crm | "KeyCRM" >> beam.WithKeys(lambda r: r["analytics_user_id"])}
         | "CoGroupByKey" >> beam.CoGroupByKey()
         | "JoinAnalyticsCRM" >> beam.ParDo(JoinAnalyticsCRMFn())
+        | "ClassifyLead" >> beam.ParDo(ClassifyLeadFn(known.qualified_lead_score_threshold))
     )
 
     all_records = (analytics, crm_enriched) | "FlattenAll" >> beam.Flatten()

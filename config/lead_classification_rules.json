@@ -1,0 +1,6 @@
+{
+  "converted_statuses": ["converted", "purchased", "subscribed"],
+  "qualified_statuses": ["demo_requested", "cart_abandoned", "form_completed"],
+  "qualified_lead_score_threshold": 70,
+  "nurturing_statuses": ["email_opened", "page_visited", "retargeted"]
+}
