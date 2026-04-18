@@ -7,9 +7,10 @@
             "request": "launch",
             "program": "${workspaceFolder}/pipeline/main.py",
             "args": [
-                "--bucket=client-model",
+                "--bucket=corsino-marketing-datalake",
                 "--project_id=corsino-marketing-labs",
-                "--date=2026-04-11"
+                "--date=2026-04-11",
+                "--temp_location=gs://corsino-marketing-dataflow/tmp"
             ],
             "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "console": "integratedTerminal",

@@ -22,7 +22,7 @@ class TableRecord:
     conversions: int = 0
     total_revenue: float = 0.0
 
-    # metadados do pipeline
+    # pipeline metadata
     source_system: str = ""
     lead_classification: str = ""
     processing_date: str = ""

@@ -4,6 +4,7 @@ from apache_beam.options.pipeline_options import StandardOptions
 from pipeline.normalize.analytics import NormalizeAdobeFn, NormalizeGA4Fn
 from pipeline.normalize.crm import DEAD_LETTER_TAG, NormalizeCRMFn
 from pipeline.options import MarketingPipelineOptions
+from pipeline.sinks.bigquery import write_leads_enriched
 from pipeline.sinks.dead_letter import write_dead_letter
 from pipeline.sources.adobe import read_adobe
 from pipeline.sources.crm import read_crm
@@ -17,10 +18,6 @@ options = MarketingPipelineOptions()
 known = options.view_as(MarketingPipelineOptions)
 runner = options.view_as(StandardOptions).runner or "DirectRunner"
 
-if "Dataflow" in runner:
-    dead_letter_path = f"gs://{known.bucket}/dead-letter/date={known.date}/{known.date}"
-else:
-    dead_letter_path = f"data/output/dead-letter/date={known.date}/{known.date}"
 
 with beam.Pipeline(options=options) as p:
     ga4 = (
@@ -71,7 +68,9 @@ with beam.Pipeline(options=options) as p:
         | "FlattenDeadLetter" >> beam.Flatten()
     )
 
-    all_records | "PrintRecords" >> beam.Map(print)
-    write_dead_letter(all_dead_letter, output_path=dead_letter_path)
+    write_leads_enriched(
+        all_records, project=known.project_id, run_date=known.date)
+    write_dead_letter(
+        all_dead_letter, output_path=f"gs://{known.bucket}/dead-letter/date={known.date}/{known.date}")
 
 log_metrics(p.result)

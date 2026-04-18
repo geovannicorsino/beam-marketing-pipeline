@@ -57,8 +57,9 @@ A pipeline that:
 - [x] `DeduplicateCRMFn` + tests
 - [x] Dead-letter sink (`pipeline/sinks/dead_letter.py`) — GCS JSON + `NormalizeCRMFn` + `DeduplicateCRMFn` integration
 - [x] Beam metrics (`pipeline/utils/metrics.py`) + `log_metrics()` with match rate alert
-- [ ] BigQuery sink → `leads_enriched` + `dead_letter` (`pipeline/sinks/bigquery.py`, `WRITE_APPEND`)
-- [ ] Wire everything in `main.py` (sinks, metrics)
+- [x] BigQuery sink → `leads_enriched` (`pipeline/sinks/bigquery.py`, `WRITE_APPEND`)
+- [x] Dead-letter → GCS JSON + external BQ table (create once via `bq` CLI)
+- [x] Wire everything in `main.py` (sinks, metrics, dead-letter)
 - [ ] Integration test (`tests/integration/test_pipeline_e2e.py`)
 - [ ] Dockerfile
 - [ ] GitHub Actions CI (`ruff check` + `pytest`)

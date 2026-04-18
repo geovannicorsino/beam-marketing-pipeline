@@ -72,6 +72,38 @@ Phase 6 — Sinks
 
 ---
 
+## BigQuery setup
+
+### `leads_enriched` — managed table
+
+Created automatically by the pipeline on first run (`CREATE_IF_NEEDED`). Schema matches `TableRecord`.
+
+```
+corsino-marketing-labs.marketing_analytics_silver.leads_enriched
+```
+
+### `dead_letter` — external table
+
+The pipeline writes dead-letter records to GCS as NDJSON. An external table in the same dataset exposes those files as a queryable BQ table — no data is duplicated.
+
+Create once via `bq` CLI:
+
+```bash
+bq mk --external_table_definition=@JSON \
+  corsino-marketing-labs:marketing_analytics_silver.dead_letter \
+  << 'EOF'
+{
+  "sourceFormat": "NEWLINE_DELIMITED_JSON",
+  "sourceUris": ["gs://{bucket}/dead-letter/date=*/*.json"],
+  "autodetect": true
+}
+EOF
+```
+
+Or via Cloud Console: BigQuery → dataset → Create table → Source: GCS, format: JSONL, enable "Auto-detect schema".
+
+---
+
 ## GCS storage layout
 
 ```
