@@ -3,7 +3,6 @@ from apache_beam import TaggedOutput
 from pipeline.normalize.crm import DEAD_LETTER_TAG
 from pipeline.transforms.dedup_crm import DeduplicateCRMFn
 
-
 RECORD_A = {
     "analytics_user_id": "ga4_user_001",
     "crm_id": "crm-001",

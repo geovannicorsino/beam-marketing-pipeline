@@ -4,7 +4,6 @@ from apache_beam import TaggedOutput
 
 from pipeline.normalize.crm import DEAD_LETTER_TAG, NormalizeCRMFn
 
-
 CRM_VALID = {
     "analytics_user_id": "ga4_user_001",
     "crm_id": "crm-001",

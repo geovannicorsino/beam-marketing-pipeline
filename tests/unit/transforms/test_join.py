@@ -1,7 +1,6 @@
 from pipeline.schemas.table_record import TableRecord
 from pipeline.transforms.join import JoinAnalyticsCRMFn
 
-
 ANALYTICS_RECORD = TableRecord(
     analytics_user_id="ga4_user_001",
     date="2026-04-10",

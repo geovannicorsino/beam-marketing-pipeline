@@ -1,7 +1,7 @@
 import dataclasses
 
 import apache_beam as beam
-from apache_beam.io.gcp.bigquery import WriteToBigQuery, BigQueryDisposition
+from apache_beam.io.gcp.bigquery import BigQueryDisposition, WriteToBigQuery
 
 LEADS_ENRICHED_SCHEMA = {
     "fields": [
@@ -38,7 +38,9 @@ def write_leads_enriched(
     table = f"{project}:{dataset}.leads_enriched${partition}"
     return (
         pcollection
-        | "ToLeadsDict" >> beam.Map(lambda r: {**dataclasses.asdict(r), "processing_date": run_date})
+        | "ToLeadsDict" >> beam.Map(
+            lambda r: {**dataclasses.asdict(r), "processing_date": run_date}
+        )
         | "WriteLeadsToBQ" >> WriteToBigQuery(
             table,
             schema=LEADS_ENRICHED_SCHEMA,

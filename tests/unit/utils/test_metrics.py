@@ -4,10 +4,9 @@ import apache_beam as beam
 from apache_beam.testing.test_pipeline import TestPipeline
 
 from pipeline.normalize.analytics import NormalizeGA4Fn
-from pipeline.normalize.crm import NormalizeCRMFn, DEAD_LETTER_TAG
+from pipeline.normalize.crm import DEAD_LETTER_TAG, NormalizeCRMFn
 from pipeline.transforms.join import JoinAnalyticsCRMFn
 from pipeline.utils.metrics import log_metrics
-
 
 GA4_RECORD = {
     "custom_dimension_user_id": "ga4_user_001",

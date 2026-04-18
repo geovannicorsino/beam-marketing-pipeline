@@ -1,5 +1,6 @@
 import csv
 import io
+
 import apache_beam as beam
 from apache_beam.io import ReadFromText
 

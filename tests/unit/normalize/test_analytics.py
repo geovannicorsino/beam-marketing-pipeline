@@ -1,6 +1,5 @@
-from pipeline.normalize.analytics import NormalizeGA4Fn, NormalizeAdobeFn
+from pipeline.normalize.analytics import NormalizeAdobeFn, NormalizeGA4Fn
 from pipeline.schemas.table_record import TableRecord
-
 
 # ── GA4 ──────────────────────────────────────────────────────────────────────
 

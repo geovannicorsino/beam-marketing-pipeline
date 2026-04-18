@@ -1,0 +1,36 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Build and push SDK container image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build image
+        run: |
+          docker build \
+            -t us-central1-docker.pkg.dev/corsino-marketing-labs/beam-marketing-pipeline/pipeline:latest \
+            -t us-central1-docker.pkg.dev/corsino-marketing-labs/beam-marketing-pipeline/pipeline:${{ github.sha }} \
+            .
+
+      - name: Push image
+        run: |
+          docker push us-central1-docker.pkg.dev/corsino-marketing-labs/beam-marketing-pipeline/pipeline:latest
+          docker push us-central1-docker.pkg.dev/corsino-marketing-labs/beam-marketing-pipeline/pipeline:${{ github.sha }}

@@ -1,6 +1,7 @@
 import pytest
-from pipeline.transforms.classification import ClassifyLeadFn
+
 from pipeline.schemas.table_record import TableRecord
+from pipeline.transforms.classification import ClassifyLeadFn
 
 
 @pytest.fixture

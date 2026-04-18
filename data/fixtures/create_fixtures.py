@@ -1,11 +1,12 @@
 """
-Script para gerar data/fixtures/adobe_analytics.parquet.
-Execute uma vez antes de rodar os testes:
+Generates data/fixtures/adobe_analytics.parquet.
+Run once before executing tests:
     python data/fixtures/create_fixtures.py
 """
+from pathlib import Path
+
 import pyarrow as pa
 import pyarrow.parquet as pq
-from pathlib import Path
 
 OUTPUT = Path(__file__).parent / "adobe_analytics.parquet"
 
@@ -55,9 +56,9 @@ data = {
         "adobe_user_006",
         "adobe_user_007",
         "adobe_user_008",
-        # ga4_user_003 aparece no Adobe também — testa dedup cross-source
+        # ga4_user_003 also appears in GA4 — tests cross-source first-touch attribution
         "ga4_user_003",
-        # null → SCHEMA_DRIFT no normalize
+        # null custom_user_id — analytics_user_id becomes ""
         None,
     ],
     "marketing_channel": [
@@ -99,4 +100,4 @@ schema = pa.schema([
 
 table = pa.Table.from_pydict(data, schema=schema)
 pq.write_table(table, OUTPUT)
-print(f"Criado: {OUTPUT} ({len(table)} registros)")
+print(f"Created: {OUTPUT} ({len(table)} records)")

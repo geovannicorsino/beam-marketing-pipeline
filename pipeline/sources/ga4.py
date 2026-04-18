@@ -1,4 +1,5 @@
 import json
+
 import apache_beam as beam
 from apache_beam.io import ReadFromText
 

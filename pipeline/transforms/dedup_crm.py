@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import apache_beam as beam
 from apache_beam import TaggedOutput
@@ -12,7 +12,7 @@ def _dead_letter_duplicate(crm_id: str, record: dict) -> dict:
         "reason": "duplicate_crm_id",
         "source_system": "crm",
         "raw_record": json.dumps(record),
-        "error_timestamp": datetime.now(timezone.utc).isoformat(),
+        "error_timestamp": datetime.now(UTC).isoformat(),
     }
 
 

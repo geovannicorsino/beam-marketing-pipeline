@@ -4,9 +4,6 @@ import apache_beam as beam
 from apache_beam.testing.test_pipeline import TestPipeline
 from apache_beam.testing.util import assert_that, equal_to
 
-from pipeline.sinks.dead_letter import write_dead_letter
-
-
 DEAD_LETTER_RECORD = {
     "reason": "missing_analytics_user_id",
     "source_system": "crm",

@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import apache_beam as beam
 from apache_beam import TaggedOutput
@@ -13,7 +13,7 @@ def _dead_letter(reason: str, element: dict) -> dict:
         "reason": reason,
         "source_system": "crm",
         "raw_record": json.dumps(element),
-        "error_timestamp": datetime.now(timezone.utc).isoformat(),
+        "error_timestamp": datetime.now(UTC).isoformat(),
     }
 
 
