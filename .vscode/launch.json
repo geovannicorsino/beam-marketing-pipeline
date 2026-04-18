@@ -8,7 +8,7 @@
             "program": "${workspaceFolder}/pipeline/main.py",
             "args": [
                 "--bucket=corsino-marketing-datalake",
-                "--project_id=corsino-marketing-labs",
+                "--project=corsino-marketing-labs",
                 "--date=2026-04-11",
                 "--temp_location=gs://corsino-marketing-dataflow/tmp"
             ],

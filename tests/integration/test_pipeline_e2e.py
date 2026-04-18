@@ -1,9 +1,9 @@
 """
 End-to-end integration test for the marketing pipeline.
 
-Runs the complete pipeline with DirectRunner against local fixtures. No GCP access
-is required: sources read from data/fixtures/, sinks are replaced by assert_that
-assertions on the output PCollections.
+Runs the complete pipeline with DirectRunner against real GCS fixtures uploaded to
+gs://corsino-marketing-datalake. Sinks are replaced by assert_that assertions on
+the output PCollections — no BigQuery writes occur during tests.
 
 Expected counts (derived from data/fixtures/):
   GA4   : 10 records → 10 normalized analytics TableRecords
@@ -57,20 +57,25 @@ EXPECTED_NO_CAMPAIGN = 5
 
 # ── Pipeline builder ──────────────────────────────────────────────────────────
 
+BUCKET = "corsino-marketing-datalake"
+ACCOUNT_ID = "corsino-marketing-labs"
+DATE = "2026-04-11"
+
+
 def _build_pipeline(p):
     """Wire all transforms onto pipeline p. Returns (all_records, all_dead_letter, crm_enriched)."""
     ga4 = (
-        read_ga4(p, bucket="", report="sessions", account_id="", date="")
+        read_ga4(p, bucket=BUCKET, report="sessions", account_id=ACCOUNT_ID, date=DATE)
         | "NormalizeGA4" >> beam.ParDo(NormalizeGA4Fn())
     )
     adobe = (
-        read_adobe(p, bucket="", report="sessions", account_id="", date="")
+        read_adobe(p, bucket=BUCKET, report="sessions", account_id=ACCOUNT_ID, date=DATE)
         | "NormalizeAdobe" >> beam.ParDo(NormalizeAdobeFn())
     )
     analytics = (ga4, adobe) | "FlattenAnalytics" >> beam.Flatten()
 
     crm_output = (
-        read_crm(p, bucket="", account_id="", date="")
+        read_crm(p, bucket=BUCKET, account_id=ACCOUNT_ID, date=DATE)
         | "NormalizeCRM" >> beam.ParDo(NormalizeCRMFn()).with_outputs(
             DEAD_LETTER_TAG, main="valid"
         )

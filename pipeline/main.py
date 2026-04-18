@@ -1,5 +1,5 @@
 import apache_beam as beam
-from apache_beam.options.pipeline_options import StandardOptions
+from apache_beam.options.pipeline_options import GoogleCloudOptions, StandardOptions
 
 from pipeline.normalize.analytics import NormalizeAdobeFn, NormalizeGA4Fn
 from pipeline.normalize.crm import DEAD_LETTER_TAG, NormalizeCRMFn
@@ -16,19 +16,20 @@ from pipeline.utils.metrics import log_metrics
 
 options = MarketingPipelineOptions()
 known = options.view_as(MarketingPipelineOptions)
+project = options.view_as(GoogleCloudOptions).project
 runner = options.view_as(StandardOptions).runner or "DirectRunner"
 
 
 with beam.Pipeline(options=options) as p:
     ga4 = (
         read_ga4(p, bucket=known.bucket, report="sessions",
-                 account_id=known.project_id, date=known.date)
+                 account_id=project, date=known.date)
         | "NormalizeGA4" >> beam.ParDo(NormalizeGA4Fn())
     )
 
     adobe = (
         read_adobe(p, bucket=known.bucket, report="sessions",
-                   account_id=known.project_id, date=known.date)
+                   account_id=project, date=known.date)
         | "NormalizeAdobe" >> beam.ParDo(NormalizeAdobeFn())
     )
 
@@ -36,7 +37,7 @@ with beam.Pipeline(options=options) as p:
 
     crm_output = (
         read_crm(p, bucket=known.bucket,
-                 account_id=known.project_id, date=known.date)
+                 account_id=project, date=known.date)
         | "NormalizeCRM" >> beam.ParDo(NormalizeCRMFn()).with_outputs(
             DEAD_LETTER_TAG, main="valid"
         )
@@ -69,7 +70,7 @@ with beam.Pipeline(options=options) as p:
     )
 
     write_leads_enriched(
-        all_records, project=known.project_id, run_date=known.date)
+        all_records, project=project, run_date=known.date)
     write_dead_letter(
         all_dead_letter, output_path=f"gs://{known.bucket}/dead-letter/date={known.date}/{known.date}")
 

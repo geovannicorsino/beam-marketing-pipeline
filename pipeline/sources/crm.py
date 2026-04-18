@@ -23,6 +23,5 @@ def _read_from_path(pipeline, pattern: str):
 
 
 def read_crm(pipeline, bucket: str, account_id: str, date: str):
-    # pattern = f"gs://{bucket}/raw/crm/leads/account_id={account_id}/date={date}/*.csv"
-    pattern = "data/fixtures/crm_2026-04-10.csv"
+    pattern = f"gs://{bucket}/crm/files/data.csv"
     return _read_from_path(pipeline, pattern)

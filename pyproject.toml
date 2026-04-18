@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "beam-marketing-pipeline"
 version = "0.1.0"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
     "apache-beam[gcp]==2.72.0"
 ]
@@ -23,7 +23,7 @@ include = ["pipeline*"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 select = ["E", "F", "I", "W", "UP"]
 
 [tool.pytest.ini_options]

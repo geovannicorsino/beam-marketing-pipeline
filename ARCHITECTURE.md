@@ -321,10 +321,43 @@ beam-marketing-pipeline/
 
 ## PipelineOptions
 
+Custom options (`MarketingPipelineOptions`):
+
 ```
---bucket        GCS bucket (required)
---project_id    GCP project ID (required)
---date          Processing date yyyy-mm-dd (required)
+--bucket    GCS bucket for raw inputs and dead-letter output  (required)
+--date      Processing date in yyyy-mm-dd format              (required)
+```
+
+Standard Beam options used by this pipeline:
+
+```
+--project           GCP project ID          (GoogleCloudOptions)
+--temp_location     GCS path for temp files (GoogleCloudOptions)
+--region            Dataflow region         (GoogleCloudOptions)
+--runner            DirectRunner | DataflowRunner (StandardOptions)
+```
+
+### Running locally (DirectRunner)
+
+```bash
+python pipeline/main.py \
+  --bucket=corsino-marketing-datalake \
+  --project=corsino-marketing-labs \
+  --date=2026-04-11 \
+  --temp_location=gs://corsino-marketing-dataflow/tmp
+```
+
+### Submitting to Dataflow
+
+```bash
+python pipeline/main.py \
+  --runner=DataflowRunner \
+  --project=corsino-marketing-labs \
+  --region=us-central1 \
+  --bucket=corsino-marketing-datalake \
+  --date=2026-04-11 \
+  --temp_location=gs://corsino-marketing-dataflow/tmp \
+  --sdk_container_image=us-central1-docker.pkg.dev/corsino-marketing-labs/beam-marketing-pipeline/pipeline:latest
 ```
 
 ---

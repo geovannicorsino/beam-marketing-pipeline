@@ -61,7 +61,7 @@ A pipeline that:
 - [x] Dead-letter → GCS JSON + external BQ table (create once via `bq` CLI)
 - [x] Wire everything in `main.py` (sinks, metrics, dead-letter)
 - [x] Integration test (`tests/integration/test_pipeline_e2e.py`)
-- [ ] Dockerfile
+- [x] Dockerfile & Dataflow
 - [ ] GitHub Actions CI (`ruff check` + `pytest`)
 
 ## Key design decisions
