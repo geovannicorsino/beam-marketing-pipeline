@@ -243,6 +243,27 @@ After job completion, `log_metrics(result)` in `pipeline/utils/metrics.py` reads
 
 ---
 
+## Testing strategy
+
+87 tests — 78 unit, 9 integration. No GCP access required; all tests run with `DirectRunner` against local fixtures.
+
+| | Unit | Integration |
+|---|---|---|
+| Scope | One DoFn in isolation | Full pipeline end-to-end |
+| Input | `beam.Create([...])` | `data/fixtures/` |
+| Sinks | Not involved | Replaced by `assert_that` |
+| Location | `tests/unit/` | `tests/integration/` |
+
+```bash
+pytest tests/unit/         # fast feedback
+pytest tests/integration/  # full pipeline validation
+pytest                     # everything
+```
+
+For patterns, counter gotchas, coverage breakdown, and fixture-level expected counts see [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md).
+
+---
+
 ## Project structure
 
 ```
@@ -276,10 +297,14 @@ beam-marketing-pipeline/
 │       └── crm_2026-04-10.csv        # 15 records
 ├── tests/
 │   ├── conftest.py
-│   └── unit/
-│       ├── sources/                  # test_ga4, test_adobe, test_crm
-│       ├── normalize/                # test_analytics, test_crm
-│       └── transforms/               # test_join
+│   ├── unit/
+│   │   ├── sources/                  # test_ga4, test_adobe, test_crm
+│   │   ├── normalize/                # test_analytics, test_crm
+│   │   ├── transforms/               # test_join, test_dedup_crm, test_classification
+│   │   ├── sinks/                    # test_dead_letter
+│   │   └── utils/                    # test_metrics
+│   └── integration/
+│       └── test_pipeline_e2e.py      # full pipeline with DirectRunner, no GCP
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                    # pending

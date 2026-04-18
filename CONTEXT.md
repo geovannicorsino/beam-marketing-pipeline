@@ -60,7 +60,7 @@ A pipeline that:
 - [x] BigQuery sink → `leads_enriched` (`pipeline/sinks/bigquery.py`, `WRITE_APPEND`)
 - [x] Dead-letter → GCS JSON + external BQ table (create once via `bq` CLI)
 - [x] Wire everything in `main.py` (sinks, metrics, dead-letter)
-- [ ] Integration test (`tests/integration/test_pipeline_e2e.py`)
+- [x] Integration test (`tests/integration/test_pipeline_e2e.py`)
 - [ ] Dockerfile
 - [ ] GitHub Actions CI (`ruff check` + `pytest`)
 
