@@ -4,8 +4,7 @@ import apache_beam as beam
 from apache_beam.io import WriteToText
 
 
-def write_dead_letter(pcollection, bucket: str, run_date: str):
-    output_path = f"gs://{bucket}/dead-letter/date={run_date}/{run_date}"
+def write_dead_letter(pcollection, output_path: str):
     return (
         pcollection
         | "SerializeDeadLetter" >> beam.Map(json.dumps)

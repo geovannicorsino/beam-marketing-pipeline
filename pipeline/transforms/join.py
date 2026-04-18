@@ -1,9 +1,13 @@
 import apache_beam as beam
+from apache_beam.metrics import Metrics
 
 from pipeline.schemas.table_record import TableRecord
 
 
 class JoinAnalyticsCRMFn(beam.DoFn):
+    crm_matched  = Metrics.counter("join", "crm_matched")
+    crm_no_match = Metrics.counter("join", "crm_no_match")
+
     def process(self, element):
         analytics_user_id, grouped = element
 
@@ -22,6 +26,11 @@ class JoinAnalyticsCRMFn(beam.DoFn):
             default=None,
         )
         campaign_name = first_touch.campaign_name if first_touch else None
+
+        if analytics_records:
+            self.crm_matched.inc()
+        else:
+            self.crm_no_match.inc()
 
         yield TableRecord(
             analytics_user_id=analytics_user_id,

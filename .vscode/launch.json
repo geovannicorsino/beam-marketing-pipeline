@@ -7,10 +7,11 @@
             "request": "launch",
             "program": "${workspaceFolder}/pipeline/main.py",
             "args": [
-                "--bucket=meu-bucket-dev",
-                "--project_id=meu-projeto-gcp",
+                "--bucket=client-model",
+                "--project_id=corsino-marketing-labs",
                 "--date=2026-04-11"
             ],
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}"
         }

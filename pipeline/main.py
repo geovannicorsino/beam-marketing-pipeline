@@ -1,4 +1,6 @@
 import apache_beam as beam
+from apache_beam.options.pipeline_options import StandardOptions
+
 from pipeline.normalize.analytics import NormalizeAdobeFn, NormalizeGA4Fn
 from pipeline.normalize.crm import DEAD_LETTER_TAG, NormalizeCRMFn
 from pipeline.options import MarketingPipelineOptions
@@ -9,9 +11,16 @@ from pipeline.sources.ga4 import read_ga4
 from pipeline.transforms.classification import ClassifyLeadFn
 from pipeline.transforms.dedup_crm import DeduplicateCRMFn
 from pipeline.transforms.join import JoinAnalyticsCRMFn
+from pipeline.utils.metrics import log_metrics
 
 options = MarketingPipelineOptions()
 known = options.view_as(MarketingPipelineOptions)
+runner = options.view_as(StandardOptions).runner or "DirectRunner"
+
+if "Dataflow" in runner:
+    dead_letter_path = f"gs://{known.bucket}/dead-letter/date={known.date}/{known.date}"
+else:
+    dead_letter_path = f"data/output/dead-letter/date={known.date}/{known.date}"
 
 with beam.Pipeline(options=options) as p:
     ga4 = (
@@ -63,4 +72,6 @@ with beam.Pipeline(options=options) as p:
     )
 
     all_records | "PrintRecords" >> beam.Map(print)
-    write_dead_letter(all_dead_letter, bucket=known.bucket, run_date=known.date)
+    write_dead_letter(all_dead_letter, output_path=dead_letter_path)
+
+log_metrics(p.result)

@@ -30,11 +30,11 @@ A pipeline that:
 
 ## GCP project
 
-| Resource        | Value                                              |
-| --------------- | -------------------------------------------------- |
-| Project ID      | `corsino-marketing-labs`                           |
-| BigQuery table  | `marketing_analytics_silver.leads_enriched`        |
-| GCS dead-letter | `dead-letter/date={date}/{date}.json`              |
+| Resource        | Value                                       |
+| --------------- | ------------------------------------------- |
+| Project ID      | `corsino-marketing-labs`                    |
+| BigQuery table  | `marketing_analytics_silver.leads_enriched` |
+| GCS dead-letter | `dead-letter/date={date}/{date}.json`       |
 
 ## Implementation status
 
@@ -56,9 +56,9 @@ A pipeline that:
 - [x] `ClassifyLeadFn` + `config/lead_classification_rules.json` + tests
 - [x] `DeduplicateCRMFn` + tests
 - [x] Dead-letter sink (`pipeline/sinks/dead_letter.py`) — GCS JSON + `NormalizeCRMFn` + `DeduplicateCRMFn` integration
+- [x] Beam metrics (`pipeline/utils/metrics.py`) + `log_metrics()` with match rate alert
 - [ ] BigQuery sink → `leads_enriched` + `dead_letter` (`pipeline/sinks/bigquery.py`, `WRITE_APPEND`)
-- [ ] Beam metrics (`pipeline/utils/metrics.py`) + `log_metrics()` with match rate alert
-- [ ] Wire everything in `main.py` (sinks, dead-letter, metrics)
+- [ ] Wire everything in `main.py` (sinks, metrics)
 - [ ] Integration test (`tests/integration/test_pipeline_e2e.py`)
 - [ ] Dockerfile
 - [ ] GitHub Actions CI (`ruff check` + `pytest`)

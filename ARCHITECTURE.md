@@ -2,6 +2,33 @@
 
 ## Pipeline flow
 
+```mermaid
+flowchart TD
+    GA4[("GA4\nJSON")]        --> NGA4["NormalizeGA4Fn\n→ TableRecord"]
+    Adobe[("Adobe\nParquet")] --> NAdo["NormalizeAdobeFn\n→ TableRecord"]
+    CRM[("CRM\nCSV")]         --> NCRM["NormalizeCRMFn"]
+
+    NGA4  --> FLAT_A["Flatten Analytics"]
+    NAdo  --> FLAT_A
+
+    NCRM  -- "missing_user_id\ninvalid_score" --> DL
+    NCRM  -- "valid dict"                     --> DEDUP["DeduplicateCRMFn"]
+    DEDUP -- "duplicate_crm_id"               --> DL[("GCS\ndead-letter")]
+    DEDUP -- "deduped dict"                   --> JOIN
+
+    FLAT_A --> JOIN["JoinAnalyticsCRMFn\nCoGroupByKey + first-touch attribution"]
+    JOIN   --> CLS["ClassifyLeadFn\nCONVERTED · QUALIFIED\nNURTURING · COLD"]
+
+    CLS    --> FLAT_ALL["Flatten All"]
+    FLAT_A --> FLAT_ALL
+
+    FLAT_ALL --> BQ[("BigQuery\nleads_enriched")]
+```
+
+---
+
+### Detailed flow
+
 ```
 Phase 1 — Parallel ingest
 ├── GA4   → ReadFromText + json.loads
@@ -132,26 +159,55 @@ Only applied to records where `source_system == "crm"`.
 
 ## Beam metrics
 
-Every `DoFn` emits counters via `apache_beam.metrics.Metrics`:
+### What are Beam metrics
 
-| Namespace  | Metric              | Where                    |
-| ---------- | ------------------- | ------------------------ |
-| `ga4`      | `records_processed` | NormalizeGA4Fn           |
-| `ga4`      | `records_discarded` | NormalizeGA4Fn           |
-| `adobe`    | `records_processed` | NormalizeAdobeFn         |
-| `adobe`    | `records_discarded` | NormalizeAdobeFn         |
-| `crm`      | `records_processed` | NormalizeCRMFn           |
-| `crm`      | `records_discarded` | NormalizeCRMFn           |
-| `join`     | `crm_matched`       | JoinAnalyticsCRMFn       |
-| `join`     | `crm_no_match`      | JoinAnalyticsCRMFn       |
-| `classify` | `converted`         | ClassifyLeadFn           |
-| `classify` | `qualified`         | ClassifyLeadFn           |
-| `classify` | `nurturing`         | ClassifyLeadFn           |
-| `classify` | `cold`              | ClassifyLeadFn           |
+`apache_beam.metrics.Metrics` is a built-in observability system that lets DoFns emit measurements during execution. Each worker collects its own values; the runner aggregates them at the end. On DirectRunner they are available via `result.metrics()` after the job finishes. On Dataflow they appear in the Cloud Console as a live dashboard during execution.
+
+There are three metric types:
+
+| Type             | What it tracks                               | Example use                              |
+| ---------------- | -------------------------------------------- | ---------------------------------------- |
+| **Counter**      | Cumulative count of events (integer, +only)  | How many records were processed          |
+| **Distribution** | Min / max / mean / count of a numeric value  | Distribution of `lead_score` across leads |
+| **Gauge**        | Latest value observed at a point in time     | Current memory usage inside a DoFn      |
+
+This pipeline uses **Counters only**. They are the most common type and sufficient for data quality monitoring.
+
+### How counters work
+
+Counters are defined as class-level attributes using `Metrics.counter(namespace, name)` and incremented inside `process()` with `.inc()`. The namespace groups related metrics — querying `result.metrics().query()` after the job returns all counters keyed as `namespace/name`.
+
+```python
+from apache_beam.metrics import Metrics
+
+class MyFn(beam.DoFn):
+    records_processed = Metrics.counter("my_namespace", "records_processed")
+
+    def process(self, element):
+        self.records_processed.inc()   # increment by 1
+        yield element
+```
+
+### Counters in this pipeline
+
+| Namespace  | Metric              | DoFn               | What it counts                                        |
+| ---------- | ------------------- | ------------------ | ----------------------------------------------------- |
+| `ga4`      | `records_processed` | NormalizeGA4Fn     | Records successfully normalized to TableRecord        |
+| `adobe`    | `records_processed` | NormalizeAdobeFn   | Records successfully normalized to TableRecord        |
+| `crm`      | `records_processed` | NormalizeCRMFn     | Records yielded as valid dicts                        |
+| `crm`      | `records_discarded` | NormalizeCRMFn     | Records routed to dead-letter (missing ID or bad score)|
+| `join`     | `crm_matched`       | JoinAnalyticsCRMFn | CRM records that found at least one analytics match   |
+| `join`     | `crm_no_match`      | JoinAnalyticsCRMFn | CRM records with no analytics match (campaign_name=None)|
+| `classify` | `converted`         | ClassifyLeadFn     | Leads classified as CONVERTED                        |
+| `classify` | `qualified`         | ClassifyLeadFn     | Leads classified as QUALIFIED                        |
+| `classify` | `nurturing`         | ClassifyLeadFn     | Leads classified as NURTURING                        |
+| `classify` | `cold`              | ClassifyLeadFn     | Leads classified as COLD                             |
+
+### Match rate alert
 
 **Match rate** = `join/crm_matched / (join/crm_matched + join/crm_no_match)`
 
-After job completion, `log_metrics(result)` extracts all counters and warns if match rate < 0.70.
+After job completion, `log_metrics(result)` in `pipeline/utils/metrics.py` reads all counters, logs each value, and emits a `logger.warning` if the match rate falls below **70%**. A low match rate means most CRM leads have no corresponding analytics session — likely a data ingestion problem upstream.
 
 ---
 

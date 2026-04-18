@@ -1,10 +1,16 @@
-import apache_beam as beam
 from datetime import datetime
+
+import apache_beam as beam
+from apache_beam.metrics import Metrics
+
 from pipeline.schemas.table_record import TableRecord
 
 
 class NormalizeGA4Fn(beam.DoFn):
+    records_processed = Metrics.counter("ga4", "records_processed")
+
     def process(self, element: dict):
+        self.records_processed.inc()
         yield TableRecord(
             analytics_user_id=element.get("custom_dimension_user_id") or "",
             date=element.get("date", ""),
@@ -18,6 +24,8 @@ class NormalizeGA4Fn(beam.DoFn):
 
 
 class NormalizeAdobeFn(beam.DoFn):
+    records_processed = Metrics.counter("adobe", "records_processed")
+
     def process(self, element: dict):
         raw_date = element.get("date", "")
         try:
@@ -25,6 +33,7 @@ class NormalizeAdobeFn(beam.DoFn):
         except (ValueError, TypeError):
             parsed_date = ""
 
+        self.records_processed.inc()
         yield TableRecord(
             analytics_user_id=element.get("custom_user_id") or "",
             date=parsed_date,
