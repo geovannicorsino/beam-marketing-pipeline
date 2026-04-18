@@ -1,0 +1,317 @@
+vars: {
+  d2-config: {
+    layout-engine: elk
+  }
+}
+
+direction: right
+
+# ──────────────────────────────────────────────────────────────────────────────
+# SOURCES
+# ──────────────────────────────────────────────────────────────────────────────
+
+sources: "Data Sources" {
+  style: {
+    fill: "#f8fafc"
+    stroke: "#94a3b8"
+    font-color: "#475569"
+    bold: true
+  }
+
+  analytics: "Web Analytics" {
+    direction: down
+    width: 200
+    style: {
+      fill: "#eff6ff"
+      stroke: "#1d4ed8"
+      font-color: "#1e40af"
+      bold: true
+    }
+    ga4: "GA4" {
+      shape: image
+      icon: https://api.iconify.design/logos/google-analytics.svg
+      width: 80
+      height: 80
+    }
+    adobe: "Adobe" {
+      shape: image
+      icon: https://api.iconify.design/logos/adobe.svg
+      width: 80
+      height: 80
+    }
+  }
+
+  paid_media: "Paid Media" {
+    direction: down
+    width: 200
+    style: {
+      fill: "#f5f3ff"
+      stroke: "#4f46e5"
+      font-color: "#3730a3"
+      bold: true
+    }
+    tiktok: "TikTok Ads" {
+      shape: image
+      icon: https://api.iconify.design/logos/tiktok-icon.svg
+      width: 80
+      height: 80
+    }
+    facebook: "Facebook Ads" {
+      shape: image
+      icon: https://api.iconify.design/logos/meta-icon.svg
+      width: 80
+      height: 80
+    }
+    gads: "Google Ads" {
+      shape: image
+      icon: https://api.iconify.design/logos/google-ads.svg
+      width: 80
+      height: 80
+    }
+    dv360: "DV360" {
+      shape: image
+      icon: https://api.iconify.design/logos/google-marketing-platform.svg
+      width: 80
+      height: 80
+    }
+  }
+
+  crm: "CRM" {
+    direction: down
+    width: 200
+    style: {
+      fill: "#f0fdf4"
+      stroke: "#16a34a"
+      font-color: "#15803d"
+      bold: true
+    }
+    analyst: "Analyst\nCSV Upload" {
+      shape: image
+      icon: https://api.iconify.design/simple-icons/googlesheets.svg
+      width: 80
+      height: 80
+    }
+  }
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# INGESTION LAYER — two transparent columns for alignment
+# ──────────────────────────────────────────────────────────────────────────────
+
+ingestion: "Ingestion Layer" {
+  direction: right
+  style: {
+    fill: "#fffbeb"
+    stroke: "#d97706"
+    font-color: "#92400e"
+    bold: true
+  }
+
+  fns: "" {
+    direction: down
+    style: {
+      fill: "#fffbeb"
+      stroke: "#fffbeb"
+    }
+    fw: "API Ingestion Framework\nCloud Run Functions" {
+      shape: image
+      icon: https://diagrams.mingrammer.com/img/resources/gcp/compute/functions.png
+      width: 80
+      height: 80
+    }
+    cr_crm: "CRM Validator\nCloud Run Functions" {
+      shape: image
+      icon: https://diagrams.mingrammer.com/img/resources/gcp/compute/functions.png
+      width: 80
+      height: 80
+    }
+  }
+
+  storage: "" {
+    direction: down
+    style: {
+      fill: "#fffbeb"
+      stroke: "#fffbeb"
+    }
+    gcs_ana: "GCS — Analytics\nAvro · partitioned" {
+      shape: image
+      icon: https://diagrams.mingrammer.com/img/resources/gcp/storage/storage.png
+      width: 80
+      height: 80
+    }
+    gcs_ads: "GCS — Ad Platforms\nAvro · partitioned" {
+      shape: image
+      icon: https://diagrams.mingrammer.com/img/resources/gcp/storage/storage.png
+      width: 80
+      height: 80
+    }
+    gcs_crm: "GCS — CRM\nAvro · full historical partitions" {
+      shape: image
+      icon: https://diagrams.mingrammer.com/img/resources/gcp/storage/storage.png
+      width: 80
+      height: 80
+    }
+  }
+
+  fns.fw     -> storage.gcs_ana: { style.animated: true }
+  fns.fw     -> storage.gcs_ads: { style.animated: true }
+  fns.cr_crm -> storage.gcs_crm: { style.animated: true }
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# TRIGGERS
+# ──────────────────────────────────────────────────────────────────────────────
+
+triggers: "Triggers" {
+  direction: down
+  style: {
+    fill: "#f8fafc"
+    stroke: "#64748b"
+    font-color: "#475569"
+    bold: true
+  }
+
+  sched: "Cloud Scheduler\n(daily)" {
+    shape: image
+    icon: https://diagrams.mingrammer.com/img/resources/gcp/devtools/scheduler.png
+    width: 80
+    height: 80
+  }
+
+  crm_trigger: "CRM import\ncomplete" {
+    shape: image
+    icon: https://diagrams.mingrammer.com/img/resources/gcp/compute/functions.png
+    width: 80
+    height: 80
+  }
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# DATAFLOW PIPELINE
+# ──────────────────────────────────────────────────────────────────────────────
+
+pipeline: "Apache Beam — Dataflow (Java)" {
+  direction: down
+  style: {
+    fill: "#faf5ff"
+    stroke: "#6d28d9"
+    font-color: "#4c1d95"
+    bold: true
+  }
+
+  df: "Dataflow Job\nTaxonomy · Classification · Attribution" {
+    shape: image
+    icon: https://diagrams.mingrammer.com/img/resources/gcp/analytics/dataflow.png
+    width: 100
+    height: 100
+  }
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# OUTPUTS — BigQuery
+# ──────────────────────────────────────────────────────────────────────────────
+
+outputs: "BigQuery" {
+  direction: down
+  style: {
+    fill: "#f0fdf4"
+    stroke: "#059669"
+    font-color: "#065f46"
+    bold: true
+  }
+
+  silver: "Silver Table\nAll records + error columns\n(audit trail)" {
+    shape: image
+    icon: https://diagrams.mingrammer.com/img/resources/gcp/analytics/bigquery.png
+    width: 80
+    height: 80
+    style: {
+      font-color: "#475569"
+    }
+  }
+
+  gold: "Gold Table\nEnriched · Dashboard-ready" {
+    shape: image
+    icon: https://diagrams.mingrammer.com/img/resources/gcp/analytics/bigquery.png
+    width: 80
+    height: 80
+    style: {
+      font-color: "#065f46"
+    }
+  }
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# CONNECTIONS
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Analytics → Ingestion framework
+sources.analytics.ga4   -> ingestion.fns.fw: { style.animated: true }
+sources.analytics.adobe -> ingestion.fns.fw: { style.animated: true }
+
+# Paid media → Ingestion framework
+sources.paid_media.tiktok   -> ingestion.fns.fw: { style.animated: true }
+sources.paid_media.facebook -> ingestion.fns.fw: { style.animated: true }
+sources.paid_media.gads     -> ingestion.fns.fw: { style.animated: true }
+sources.paid_media.dv360    -> ingestion.fns.fw: { style.animated: true }
+
+# CRM analyst upload → Cloud Run Functions
+sources.crm.analyst -> ingestion.fns.cr_crm: "GCS trigger" {
+  style: {
+    stroke: "#dc2626"
+    stroke-dash: 5
+    font-color: "#dc2626"
+    bold: true
+    animated: true
+  }
+}
+
+# GCS buckets → Dataflow
+ingestion.storage.gcs_ana -> pipeline.df: { style.animated: true }
+ingestion.storage.gcs_ads -> pipeline.df: { style.animated: true }
+ingestion.storage.gcs_crm -> pipeline.df: { style.animated: true }
+
+# Triggers → Dataflow
+triggers.sched -> pipeline.df: "daily run" {
+  style: {
+    stroke: "#64748b"
+    stroke-dash: 4
+    font-color: "#94a3b8"
+    animated: true
+  }
+}
+
+ingestion.fns.cr_crm -> triggers.crm_trigger: {
+  style: {
+    stroke: "#64748b"
+    stroke-dash: 4
+    animated: true
+  }
+}
+
+triggers.crm_trigger -> pipeline.df: "import trigger" {
+  style: {
+    stroke: "#64748b"
+    stroke-dash: 4
+    font-color: "#94a3b8"
+    animated: true
+  }
+}
+
+# Dataflow → BigQuery
+pipeline.df -> outputs.silver: "all records" {
+  style: {
+    stroke: "#64748b"
+    font-color: "#94a3b8"
+    animated: true
+  }
+}
+
+pipeline.df -> outputs.gold: "enriched output" {
+  style: {
+    stroke: "#059669"
+    font-color: "#059669"
+    bold: true
+    animated: true
+  }
+}

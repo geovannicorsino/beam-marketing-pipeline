@@ -11,8 +11,8 @@ The focus is not on questioning the architecture or whether it's the optimal sol
 ## Goals
 
 - Reimplement a known pipeline architecture in Python instead of Java
-- Practice Apache Beam patterns: multi-source ingest, CoGroupByKey, Flatten, DoFn metrics
-- Add what was missing in the original: lead classification rules, dead-letter sink, Beam counters
+- Practice Apache Beam patterns: multi-source ingest, CoGroupByKey, Flatten, tagged outputs, DoFn metrics, side inputs (AsSingleton)
+- Add what was missing in the original: lead classification rules from GCS side input, dead-letter sink, Beam counters, Workload Identity Federation
 - Serve as a portfolio piece demonstrating production-grade Beam development
 
 ## What we are building
@@ -51,26 +51,14 @@ A pipeline that:
 - Fixtures: `ga4.json`, `adobe_analytics.parquet`, `crm_2026-04-10.csv`
 - Unit tests: 41 passing, 72% coverage
 
-### To do
-
-- [x] `ClassifyLeadFn` + `config/lead_classification_rules.json` + tests
-- [x] `DeduplicateCRMFn` + tests
-- [x] Dead-letter sink (`pipeline/sinks/dead_letter.py`) — GCS JSON + `NormalizeCRMFn` + `DeduplicateCRMFn` integration
-- [x] Beam metrics (`pipeline/utils/metrics.py`) + `log_metrics()` with match rate alert
-- [x] BigQuery sink → `leads_enriched` (`pipeline/sinks/bigquery.py`, `WRITE_APPEND`)
-- [x] Dead-letter → GCS JSON + external BQ table (create once via `bq` CLI)
-- [x] Wire everything in `main.py` (sinks, metrics, dead-letter)
-- [x] Integration test (`tests/integration/test_pipeline_e2e.py`)
-- [x] Dockerfile & Dataflow
-- [ ] GitHub Actions CI (`ruff check` + `pytest`)
-
 ## Key design decisions
 
 - **Single schema** — `TableRecord` is the only data model; fields not available from a given source default to empty/zero
 - **CRM as primary entity** — the join enriches CRM records with analytics data, not the other way around
 - **Full CRM load** — CRM file is a full weekly snapshot (`crm/files/data.csv`), no date partition
 - **Dead-letter over discard** — invalid records are written to GCS for investigation and reprocessing
-- **Classification rules in JSON** — `config/lead_classification_rules.json` keeps business rules out of code
+- **Classification rules as GCS side input** — `config/lead_classification_rules.json` stored in GCS, read via `ReadFromText` and passed as `AsSingleton` to `ClassifyLeadFn`; updatable without rebuilding the image
+- **Account list from GCS** — `config/accounts.json` loaded before the pipeline via `load_json_config()`; drives which accounts are ingested in each run
 - **Flatten** — analytics and enriched CRM records are merged into one PCollection for the final sinks
 
 ## Tech stack

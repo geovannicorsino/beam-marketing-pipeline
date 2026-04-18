@@ -114,13 +114,10 @@ Coverage measured across the full test suite (unit + integration). `main.py` and
 
 ## Test inventory
 
-**87 tests total — 78 unit, 9 integration**
+**71 tests total — 62 unit, 9 integration**
 
 | File | Tests | What it covers |
 |---|---|---|
-| `unit/sources/test_ga4.py` | 5 | `read_ga4` — record count, field mapping, null campaign |
-| `unit/sources/test_adobe.py` | 5 | `read_adobe` — record count, field types, known values |
-| `unit/sources/test_crm.py` | 6 | `read_crm` — CSV parsing, header skip, empty fields |
 | `unit/normalize/test_analytics.py` | 12 | `NormalizeGA4Fn`, `NormalizeAdobeFn` — field mapping, date parsing, null handling |
 | `unit/normalize/test_crm.py` | 10 | `NormalizeCRMFn` — valid path, dead-letter routing, reason field, JSON encoding |
 | `unit/transforms/test_join.py` | 9 | `JoinAnalyticsCRMFn` — match, no-match, first-touch attribution, edge cases |

@@ -2,27 +2,12 @@
 
 ## Pipeline flow
 
-```mermaid
-flowchart TD
-    GA4[("GA4\nJSON")]        --> NGA4["NormalizeGA4Fn\n→ TableRecord"]
-    Adobe[("Adobe\nParquet")] --> NAdo["NormalizeAdobeFn\n→ TableRecord"]
-    CRM[("CRM\nCSV")]         --> NCRM["NormalizeCRMFn"]
-
-    NGA4  --> FLAT_A["Flatten Analytics"]
-    NAdo  --> FLAT_A
-
-    NCRM  -- "missing_user_id\ninvalid_score" --> DL
-    NCRM  -- "valid dict"                     --> DEDUP["DeduplicateCRMFn"]
-    DEDUP -- "duplicate_crm_id"               --> DL[("GCS\ndead-letter")]
-    DEDUP -- "deduped dict"                   --> JOIN
-
-    FLAT_A --> JOIN["JoinAnalyticsCRMFn\nCoGroupByKey + first-touch attribution"]
-    JOIN   --> CLS["ClassifyLeadFn\nCONVERTED · QUALIFIED\nNURTURING · COLD"]
-
-    CLS    --> FLAT_ALL["Flatten All"]
-    FLAT_A --> FLAT_ALL
-
-    FLAT_ALL --> BQ[("BigQuery\nleads_enriched")]
+```
+GA4 JSON     ──┐
+               ├─► Normalize ─► Flatten ─► Join (CoGroupByKey) ─► Classify ─► BigQuery leads_enriched
+Adobe Parquet ─┘                           │
+                                           └─► Dead-letter ─► GCS (NDJSON)
+CRM CSV ───────────────────────────────────►
 ```
 
 ---
@@ -30,10 +15,14 @@ flowchart TD
 ### Detailed flow
 
 ```
-Phase 1 — Parallel ingest
-├── GA4   → ReadFromText + json.loads
+Phase 0 — Config (before pipeline starts)
+├── accounts.json  → load_json_config(accounts_path) → list of account_ids
+└── rules          → ReadFromText(rules_path) | ToList | json.loads → AsSingleton side input
+
+Phase 1 — Parallel ingest  [build_analytics / build_crm in pipeline/ingest.py]
+├── GA4   → ReadFromText + json.loads         (one read per account_id)
 │           gs://{bucket}/raw/ga4/sessions/account_id={id}/date={date}/*.json
-├── Adobe → ReadFromParquet
+├── Adobe → ReadFromParquet                   (one read per account_id)
 │           gs://{bucket}/raw/adobe/{report}/account_id={id}/date={date}/*.parquet
 └── CRM   → ReadFromText + csv.DictReader
             gs://{bucket}/crm/files/data.csv          ← full weekly load, no partition
@@ -57,7 +46,7 @@ Phase 4 — Flatten
     → beam.Flatten() → single PCollection[TableRecord]
 
 Phase 5 — Lead classification
-├── Rules loaded from config/lead_classification_rules.json via setup()
+├── Rules loaded from GCS via side input (AsSingleton)
 ├── Only applied to records where source_system == "crm"
 ├── CONVERTED → status IN [converted, purchased, subscribed]
 ├── QUALIFIED → status IN [demo_requested, cart_abandoned, form_completed]
@@ -168,7 +157,7 @@ class TableRecord:
 
 ## Lead classification rules
 
-Defined in `config/lead_classification_rules.json`, loaded via `setup()` in `ClassifyLeadFn`.
+Defined in `config/lead_classification_rules.json`, stored in GCS and loaded at runtime as a Beam side input (`AsSingleton`).
 Only applied to records where `source_system == "crm"`.
 
 ```json
@@ -245,7 +234,7 @@ After job completion, `log_metrics(result)` in `pipeline/utils/metrics.py` reads
 
 ## Testing strategy
 
-87 tests — 78 unit, 9 integration. No GCP access required; all tests run with `DirectRunner` against local fixtures.
+71 tests — 62 unit, 9 integration. No GCP access required; all tests run with `DirectRunner` against local fixtures.
 
 | | Unit | Integration |
 |---|---|---|
@@ -389,7 +378,7 @@ dev = [
 | Single schema         | `TableRecord` for all sources              | Simplifies Flatten — all PCollections share the same type         |
 | Join direction        | CRM primary, analytics enriches            | CRM is the lead entity; analytics provides campaign attribution   |
 | `source_medium`       | Combined field (`"google / cpc"`)          | Preserves GA4 native format, avoids lossy split                   |
-| Classification rules  | JSON config loaded in `setup()`            | Keeps business rules out of code; `setup()` is called on workers  |
+| Classification rules  | JSON in GCS, loaded as `AsSingleton` side input | Rules updatable without rebuilding the image; account list drives ingest |
 | CRM load strategy     | Full weekly load, no date partition        | CRM file is always a full snapshot, not incremental               |
 | Dead-letter           | GCS JSON instead of discard                | Preserves bad records for investigation and reprocessing          |
 | Sink strategy         | BigQuery only (`leads_enriched` + `dead_letter`) | Analysts query directly from BQ; GCS Parquet silver redundante    |

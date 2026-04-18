@@ -31,7 +31,7 @@ GitHub Actions job
 GCP Workload Identity Pool
   │
   │  2. GCP validates the token against the trusted issuer
-  │     Checks the attribute condition: repository == "geovanni-corsino/beam-marketing-pipeline"
+  │     Checks the attribute condition: repository == "geovannicorsino/beam-marketing-pipeline"
   │
   ▼
 Service Account impersonation
@@ -61,7 +61,7 @@ gcloud iam workload-identity-pools providers create-oidc "github" \
   --display-name="GitHub OIDC" \
   --issuer-uri="https://token.actions.githubusercontent.com" \
   --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
-  --attribute-condition="assertion.repository=='geovanni-corsino/beam-marketing-pipeline'"
+  --attribute-condition="assertion.repository=='geovannicorsino/beam-marketing-pipeline'"
 
 # 3. Service Account with Artifact Registry write permission
 gcloud iam service-accounts create "github-actions-publisher" \
@@ -81,7 +81,7 @@ gcloud iam service-accounts add-iam-policy-binding \
   "github-actions-publisher@corsino-marketing-labs.iam.gserviceaccount.com" \
   --project=corsino-marketing-labs \
   --role="roles/iam.workloadIdentityUser" \
-  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-actions/attribute.repository/geovanni-corsino/beam-marketing-pipeline"
+  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-actions/attribute.repository/geovannicorsino/beam-marketing-pipeline"
 ```
 
 ### GitHub secrets required
@@ -103,4 +103,4 @@ Add these two secrets in **GitHub → repository → Settings → Secrets and va
 | OIDC Provider | `github` |
 | Service Account | `github-actions-publisher@corsino-marketing-labs.iam.gserviceaccount.com` |
 | Artifact Registry repo | `us-central1-docker.pkg.dev/corsino-marketing-labs/beam-marketing-pipeline` |
-| Repo scope | `geovanni-corsino/beam-marketing-pipeline` only |
+| Repo scope | `geovannicorsino/beam-marketing-pipeline` only |
