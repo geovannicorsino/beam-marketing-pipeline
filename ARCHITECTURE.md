@@ -357,7 +357,8 @@ python pipeline/main.py \
   --bucket=corsino-marketing-datalake \
   --date=2026-04-11 \
   --temp_location=gs://corsino-marketing-dataflow/tmp \
-  --sdk_container_image=us-central1-docker.pkg.dev/corsino-marketing-labs/beam-marketing-pipeline/pipeline:latest
+  --sdk_container_image=us-central1-docker.pkg.dev/corsino-marketing-labs/beam-marketing-pipeline/pipeline:latest \
+  --no_use_public_ips
 ```
 
 ---
