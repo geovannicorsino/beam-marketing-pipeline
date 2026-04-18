@@ -15,7 +15,7 @@
 
 ---
 
-> 💡 **Backstory included** — This project reimplements a production pipeline I architected for a marketing client. [See the full retrospective](https://github.com/geova/beam-marketing-pipeline/blob/main/docs/PAST_ARCHITECTURE.md) at the bottom of this README to understand the evolution and why certain patterns were chosen.
+> 💡 **Backstory included** — This project reimplements a production pipeline I architected for a marketing client. [See the full retrospective](docs/PAST_ARCHITECTURE.md) at the bottom of this README to understand the evolution and why certain patterns were chosen.
 
 ---
 

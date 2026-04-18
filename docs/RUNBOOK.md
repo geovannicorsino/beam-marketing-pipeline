@@ -8,7 +8,7 @@ End-to-end guide to set up, run locally, and deploy to Dataflow from a clean mac
 
 | Tool | Version | Install |
 |---|---|---|
-| Python | 3.12+ | [python.org](https://python.org) |
+| Python | 3.13+ | [python.org](https://python.org) |
 | Docker Desktop | any | [docker.com](https://docker.com) |
 | Google Cloud SDK | any | [cloud.google.com/sdk](https://cloud.google.com/sdk) |
 
@@ -31,8 +31,11 @@ gcloud services enable \
   dataflow.googleapis.com \
   bigquery.googleapis.com \
   storage.googleapis.com \
-  containerregistry.googleapis.com
+  containerregistry.googleapis.com \
+  iamcredentials.googleapis.com
 ```
+
+> `iamcredentials.googleapis.com` is required for Workload Identity Federation token exchange in GitHub Actions CI/CD.
 
 ### Create GCS buckets
 
@@ -63,6 +66,20 @@ bq mk --external_table_definition=@JSON \
 }
 EOF
 ```
+
+### Upload config files to GCS (required before first run)
+
+```bash
+gsutil cp config/lead_classification_rules.json \
+  gs://corsino-marketing-datalake/config/lead_classification_rules.json
+
+gsutil cp config/accounts.json \
+  gs://corsino-marketing-datalake/config/accounts.json
+```
+
+These files are loaded at pipeline start via `load_json_config()`. The default paths (`--rules_path`, `--accounts_path`) point to `gs://{bucket}/config/` — uploading here means the defaults work without any extra flags.
+
+---
 
 ### Upload fixtures to GCS (required for integration tests and local runs)
 
@@ -119,7 +136,7 @@ Or use the VS Code launch configuration: **Run Pipeline (local)**.
 # Unit tests only (fast, no GCP)
 pytest tests/unit/
 
-# Integration tests (reads from GCS — requires GCP auth)
+# Integration tests (reads fixtures from GCS — requires GCP auth + fixtures uploaded)
 pytest tests/integration/
 
 # Full suite with coverage

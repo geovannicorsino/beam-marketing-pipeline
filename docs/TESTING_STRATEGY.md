@@ -6,7 +6,7 @@
 
 A **unit test** isolates a single piece of logic — one DoFn, one function — and feeds it controlled input via `beam.Create`. It never reads from files or calls external services. If a unit test fails, you know exactly which component broke.
 
-An **integration test** runs the entire pipeline from source to the last transform, using real fixture files and the full transform graph. It proves that all the pieces work together correctly and that the pipeline produces the exact output you expect for a known input.
+An **integration test** runs the entire pipeline from source to the last transform, using fixture files on GCS and the full transform graph. It proves that all the pieces work together correctly and that the pipeline produces the exact output you expect for a known input.
 
 Neither replaces the other. Unit tests give fast feedback during development; the integration test guards against regressions in the pipeline as a whole.
 
@@ -103,12 +103,15 @@ Coverage measured across the full test suite (unit + integration). `main.py` and
 | `pipeline/transforms/join.py` | 19 | 19 | 100% |
 | `pipeline/utils/metrics.py` | 16 | 16 | 100% |
 | `pipeline/sinks/dead_letter.py` | 5 | 4 | 80% |
+| `pipeline/ingest.py` | — | — | not measured* |
+| `pipeline/utils/config.py` | — | — | not measured* |
 | `pipeline/sinks/bigquery.py` | — | — | not measured* |
+| `pipeline/sinks/write.py` | — | — | not measured* |
 | `pipeline/main.py` | — | — | not measured* |
 | `pipeline/options.py` | — | — | not measured* |
 | **Total (measured modules)** | **182** | **181** | **~99%** |
 
-\* These modules require a live GCP connection (`WriteToBigQuery`, `DataflowRunner`) and are intentionally excluded from automated test coverage.
+\* These modules require a live GCP connection (GCS reads, `WriteToBigQuery`, `DataflowRunner`) and are intentionally excluded from automated test coverage.
 
 ---
 

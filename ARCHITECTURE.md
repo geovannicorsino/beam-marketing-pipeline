@@ -269,16 +269,20 @@ beam-marketing-pipeline/
 │   ├── normalize/
 │   │   ├── analytics.py              # NormalizeGA4Fn, NormalizeAdobeFn → TableRecord
 │   │   └── crm.py                    # NormalizeCRMFn → dict (+ dead-letter)
+│   ├── ingest.py                     # build_analytics(), build_crm()
 │   ├── transforms/
 │   │   ├── join.py                   # JoinAnalyticsCRMFn (CoGroupByKey + first-touch attribution)
-│   │   └── classification.py        # ClassifyLeadFn
+│   │   └── classification.py         # ClassifyLeadFn (rules via AsSingleton side input)
 │   ├── sinks/
-│   │   ├── bigquery.py               # WriteToBigQuery → leads_enriched + dead_letter tables
-│   │   └── dead_letter.py            # WriteToText → GCS dead-letter
+│   │   ├── bigquery.py               # write_leads_enriched → BigQuery leads_enriched
+│   │   ├── dead_letter.py            # write_dead_letter → GCS NDJSON
+│   │   └── write.py                  # write_pipeline_output — combines both sinks
 │   └── utils/
+│       ├── config.py                 # load_json_config() — local or gs:// paths
 │       └── metrics.py                # log_metrics() + match rate alert
 ├── config/
-│   └── lead_classification_rules.json
+│   ├── lead_classification_rules.json
+│   └── accounts.json                 # list of account_ids to ingest
 ├── data/
 │   └── fixtures/
 │       ├── ga4.json                  # 10 records, NDJSON
@@ -287,13 +291,12 @@ beam-marketing-pipeline/
 ├── tests/
 │   ├── conftest.py
 │   ├── unit/
-│   │   ├── sources/                  # test_ga4, test_adobe, test_crm
 │   │   ├── normalize/                # test_analytics, test_crm
 │   │   ├── transforms/               # test_join, test_dedup_crm, test_classification
 │   │   ├── sinks/                    # test_dead_letter
 │   │   └── utils/                    # test_metrics
 │   └── integration/
-│       └── test_pipeline_e2e.py      # full pipeline with DirectRunner, no GCP
+│       └── test_pipeline_e2e.py      # full pipeline with DirectRunner + GCS fixtures
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                    # pending
@@ -313,8 +316,12 @@ beam-marketing-pipeline/
 Custom options (`MarketingPipelineOptions`):
 
 ```
---bucket    GCS bucket for raw inputs and dead-letter output  (required)
---date      Processing date in yyyy-mm-dd format              (required)
+--bucket          GCS bucket for raw inputs and dead-letter output  (required)
+--date            Processing date in yyyy-mm-dd format              (required)
+--rules_path      GCS or local path to lead_classification_rules.json
+                  (default: gs://{bucket}/config/lead_classification_rules.json)
+--accounts_path   GCS or local path to accounts.json
+                  (default: gs://{bucket}/config/accounts.json)
 ```
 
 Standard Beam options used by this pipeline:
